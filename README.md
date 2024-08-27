@@ -4,6 +4,7 @@ A tornado web server emulating a MOTU AVB interface's datastore API. Enables dev
 
 For Datastore API, see [MOTU AVB Datastore API Docs](https://cdn-data.motu.com/downloads/audio/AVB/docs/MOTU%20AVB%20Web%20API.pdf)
 
+For a websocket bridge, see [MOTU AVB Websocket Bridge](https://github.com/ChristopherJohnston/motu_websocket_bridge)
 
 # Usage
 
