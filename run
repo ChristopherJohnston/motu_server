@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+import asyncio
+from motu_server import server
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog='motu_server',
+        description="Run the web server"
+    )
+    parser.add_argument('--datastore', type=str, help="The path to the datastore")
+    parser.add_argument('--port', type=int, help="The port to listen on")
+    parser.set_defaults(datastore=None, port=8888)
+    args = parser.parse_args()
+
+    asyncio.run(server.main(args.datastore, args.port))
+
+if __name__ == '__main__':
+    main()
+    

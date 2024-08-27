@@ -1,0 +1,99 @@
+#
+# Get API Version
+###
+# @name apiVersion
+GET http://localhost:8888/apiversion
+
+
+#####################################
+# Data Retrieval using GET
+#####################################
+
+#
+# Get the entire datastore
+###
+
+# @name entireDataStore
+GET http://localhost:8888/datastore
+
+#
+# Get multiple values from subtree
+###
+# @name getValuesFromSubtree
+GET http://localhost:8888/datastore/mix/chan/0
+
+#
+# Get single value
+###
+# @name getSingleValue
+GET http://localhost:8888/datastore/mix/chan/0/matrix/aux/0/send
+
+
+#####################################
+# Data Modification using PATCH
+#####################################
+
+#
+# Set a single value
+###
+# @name setSingleValue
+PATCH http://localhost:8888/datastore/mix/chan/0/matrix/aux/0/send?client=1&json={"value": "0.4"}
+
+
+###
+GET http://localhost:8888/datastore/mix/chan/0/matrix/aux/0/send
+
+#
+# Set multiple values on the same subtree
+###
+# @name setMultipleValuesInSubtree
+
+PATCH http://localhost:8888/datastore/ext/obank/3?client=1&json={"ch/0/name":"The Best of Channels", "ch/1/name":"The Worst of Channels"}
+
+###
+GET http://localhost:8888/datastore/ext/obank/3
+
+#
+# Set multple values with full paths
+###
+
+# @name setMultipleValuesFullPath
+PATCH http://localhost:8888/datastore?client=1&json={"ext/obank/2/ch/0/name":"I guess this channel is fine", "mix/chan/0/gate/enable":1}
+
+###
+
+GET http://localhost:8888/datastore/ext/obank/2/ch/0/name
+
+### 
+GET http://localhost:8888/datastore/mix/chan/0/gate/enable
+
+#####################################
+# ETags and Long Polling
+#####################################
+
+#
+# Long Polling
+###
+
+# 1. Get datastore to find current etag
+# @name longPollingGetDataStore
+
+GET http://localhost:8888/datastore?client=1
+
+### 
+# 2. Get datastore, passing If-None-Match header
+# @name longPollingWait
+GET http://localhost:8888/datastore?client=1
+If-None-Match: {{longPollingGetDataStore.response.headers.Etag}}
+
+###
+# 3. Long polling update from same clientId - long poll should not return
+# @name longPollingUpdateSameClient
+
+PATCH http://localhost:8888/datastore/mix/chan/0/matrix/aux/0/send?client=1&json={"value": "0.4"}
+
+###
+# 4. Long polling update from another clientId - long poll should return
+# @name longPollingUpdateDifferentClient
+
+PATCH http://localhost:8888/datastore/mix/chan/0/matrix/aux/0/send?client=2&json={"value": "0.4"}
