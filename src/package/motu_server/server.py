@@ -80,36 +80,56 @@ class DatastoreHandler(tornado.web.RequestHandler):
         """
         client_id = self._get_client_id()
         
+        
+        last_etag_str: Optional[str] = self.request.headers.get("If-None-Match", None)
+
+        if last_etag_str is None or ServerObjects.datastore.parse_value(last_etag_str) != await ServerObjects.datastore.etag.value:
+            # Etag was not sent or they don't match, read entire datastore.
+            self.set_header("Etag", str(await ServerObjects.datastore.etag.value))
+            self.write(ServerObjects.datastore.read(path))
+            return
+
         # When there's an "If-None_Match" header containing the last etag, the client is long polling.
         # In this case, if the provided eTag matches the current eTag, wait up to 15 seconds for updates.
-        last_etag = int(self.request.headers.get("If-None-Match", -1))
-        if last_etag > -1 and last_etag == await ServerObjects.datastore.etag.value:
+        logger.info(f"{client_id}: etag {last_etag_str} matches server - long poll call waiting 15 seconds for updates.")
+        
+        remainingTime = datetime.timedelta(seconds=15)
+        startTime = datetime.datetime.now()
 
-            logger.info(f"{client_id}: etags match - long poll call waiting for updates")
+        while remainingTime > datetime.timedelta(seconds=0):
+            if not await ServerObjects.datastore.wait_for_updates(timeout=remainingTime):
+                # If wait_for_updates returned False, condition.notify_all was not called.
+                # Therefore, as no updates were made before the timeout, Return an http/304.
+                logger.info(f"{client_id}: Timed out waiting for update. Returning with HTTP/304 status.")
+                self.set_status(304)
+                break
+
+            # There was an update made before timeout.
+            # Filter out updates from the same client or any that aren't relevant
+            # to the scope of the request (ie not under the same path).
+            updated_by = await ServerObjects.datastore.etag.updated_by
             
-            remainingTime = datetime.timedelta(seconds=15)
-            startTime = datetime.datetime.now()
-
-            while remainingTime > datetime.timedelta(seconds=0):
-                if not await ServerObjects.datastore.wait_for_updates(timeout=remainingTime):
-                    logger.info(f"{client_id}: timed out waiting for update")
+            if updated_by != client_id:                
+                # An update was received after being made by another client.
+                # Return only the updates that are relevant to the client.
+                logger.info(f"{client_id}: New data received after update by {updated_by}.")                
+                updates = ServerObjects.datastore.read_last_update(path)
+                
+                if updates:
                     self.set_header("Etag", str(await ServerObjects.datastore.etag.value))
-                    self.set_status(304)
-                    return
-
-                # Filter out updates from the same client
-                updated_by = await ServerObjects.datastore.etag.updated_by               
-            
-                if updated_by == client_id:                    
-                    remainingTime = remainingTime - (datetime.datetime.now() - startTime)
-                    logger.info(f"{client_id}: ignoring update recieved from client {updated_by}. Remaining time: {remainingTime}")                
-                else:
-                    logger.info(f"{client_id}: New data received after update by {updated_by}.")
+                    self.write(updates)
                     break
-    
-        # If there's new data, read from the datastore
-        self.set_header("Etag", str(await ServerObjects.datastore.etag.value))
-        self.write(ServerObjects.datastore.read(path))
+
+                logger.info(f"{client_id}: No relevant updates were made so continuing to wait.")
+            else:
+                logger.info(f"{client_id}: Ignoring update made by the same client.")
+                        
+            # An update was received but it was made by this client or was not relevant.
+            # Ignore and keep waiting for the remaining time of the original 15 seconds.
+            # Clamp this to zero just in case we've gone over since the Condition fell through.
+            remainingTime = max(datetime.timedelta(seconds=0), remainingTime - (datetime.datetime.now() - startTime))
+            logger.info(f"{client_id}: Remaining time: {remainingTime}.")
+
 
     async def options(self, path:str=""):
         """

@@ -112,10 +112,10 @@ class DatastoreTests(unittest.IsolatedAsyncioTestCase):
             "mix/group/0/matrix/aux/0/send": 1.0
         })
 
-    def test__parse_value(self):
-        self.assertEqual(self.ds._parse_value("1"), 1)
-        self.assertEqual(self.ds._parse_value("1.0"), 1.0)
-        self.assertEqual(self.ds._parse_value("Channel1"), "Channel1")
+    def test_parse_value(self):
+        self.assertEqual(self.ds.parse_value("1"), 1)
+        self.assertEqual(self.ds.parse_value("1.0"), 1.0)
+        self.assertEqual(self.ds.parse_value("Channel1"), "Channel1")
 
     def test__expand_tree(self):
         inputs = {

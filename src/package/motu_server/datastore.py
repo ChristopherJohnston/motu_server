@@ -66,6 +66,7 @@ class Datastore:
         """
         self.etag = ETag()
         self.datastoreLock = Lock()
+        self.last_update: dict = {}
 
         self._datastore: DatastoreDict = {}
 
@@ -96,7 +97,7 @@ class Datastore:
         res: DatastoreDict = {}
 
         for k, v in tree.items():
-            currentPath = f"{basePath}/{k}" if basePath else k
+            currentPath = f"{basePath}/{k}" if basePath != "" else k
 
             if isinstance(v, dict):
                 res.update(self._flatten_tree(v, currentPath))
@@ -105,7 +106,7 @@ class Datastore:
 
         return res
     
-    def _parse_value(self, value: str) -> Union[str, int, float]:
+    def parse_value(self, value: str) -> Union[str, int, float]:
         """
         Parses a value as integar, float or stirng from the given value.
         """
@@ -133,7 +134,7 @@ class Datastore:
             """
             Recursively insert the values into the tree
             """
-            r[parts[0]] = self._parse_value(value) if len(parts) == 1 else _insert_tree(r.get(parts[0], {}), parts[1:], value)
+            r[parts[0]] = self.parse_value(value) if len(parts) == 1 else _insert_tree(r.get(parts[0], {}), parts[1:], value)
             return r
 
         res: DatastoreDict = {}
@@ -159,21 +160,32 @@ class Datastore:
             else:
                 original[k] = v
 
-    def read(self, path: Optional[str]=None) -> DatastoreDict:
+    def _read(self, datastore: DatastoreDict, path: str="") -> DatastoreDict:
+        """
+        Read the values from the given datastore at the given path.
+        """
+        current_level = datastore
+
+        if path != "":
+            for level in path.split("/"):
+                current_level = current_level.get(level, {})
+        
+        if isinstance(current_level, dict):
+            return self._flatten_tree(current_level)
+        else:
+            return { "value": current_level }
+
+    def read(self, path: str="") -> DatastoreDict:
         """
         Read datastore values at the given path. If none given, read all values.
         """
-        if not path:
-            return self._flatten_tree(self._datastore)
+        return self._read(self._datastore, path)
         
-        currentLevel = self._datastore
-        for level in path.split("/"):
-            currentLevel = currentLevel.get(level, {})
-
-        if isinstance(currentLevel, dict):        
-            return self._flatten_tree(currentLevel)
-        else:
-            return { "value": currentLevel }
+    def read_last_update(self, path: str="") -> DatastoreDict:
+        """
+        Read the last updated values at the given path.
+        """
+        return self._read(self.last_update, path)
         
     async def wait_for_updates(self, timeout:Union[int, datetime.timedelta]=15) -> bool:
         """
@@ -194,8 +206,10 @@ class Datastore:
         Write the values under the given base path.
         """
         async with self.datastoreLock:
-            self._update_nested(self._datastore, self._expand_tree(values, base_path))
+            updates = self._expand_tree(values, base_path)
+            self._update_nested(self._datastore, updates)
+            self.last_update = updates.copy()
 
-        await self.etag.increment(client_id)        
+        await self.etag.increment(client_id)
 
     
