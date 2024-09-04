@@ -67,7 +67,6 @@ class DatastoreHandler(tornado.web.RequestHandler):
         
         if client_id not in ServerObjects.clients:
             # New Client
-            logger.warn(client_id)
             ServerObjects.clients[client_id] = {}
             logger.info(f"New Client {client_id}.")
             return client_id
@@ -78,13 +77,14 @@ class DatastoreHandler(tornado.web.RequestHandler):
         """
         Retrieve datastore data at the given path.
         """
-        client_id = self._get_client_id()
-        
+        client_id = self._get_client_id()        
         
         last_etag_str: Optional[str] = self.request.headers.get("If-None-Match", None)
+        server_etag = await ServerObjects.datastore.etag.value
 
-        if last_etag_str is None or ServerObjects.datastore.parse_value(last_etag_str) != await ServerObjects.datastore.etag.value:
+        if last_etag_str is None or ServerObjects.datastore.parse_value(last_etag_str) != server_etag:
             # Etag was not sent or they don't match, read entire datastore.
+            logger.info(f"{client_id}: Returning data as etags dont match. Header: {last_etag_str}, Datastore: {server_etag}")
             self.set_header("Etag", str(await ServerObjects.datastore.etag.value))
             self.write(ServerObjects.datastore.read(path))
             return
@@ -100,8 +100,6 @@ class DatastoreHandler(tornado.web.RequestHandler):
             if not await ServerObjects.datastore.wait_for_updates(timeout=remainingTime):
                 # If wait_for_updates returned False, condition.notify_all was not called.
                 # Therefore, as no updates were made before the timeout, Return an http/304.
-                logger.info(f"{client_id}: Timed out waiting for update. Returning with HTTP/304 status.")
-                self.set_status(304)
                 break
 
             # There was an update made before timeout.
@@ -118,7 +116,7 @@ class DatastoreHandler(tornado.web.RequestHandler):
                 if updates:
                     self.set_header("Etag", str(await ServerObjects.datastore.etag.value))
                     self.write(updates)
-                    break
+                    return
 
                 logger.info(f"{client_id}: No relevant updates were made so continuing to wait.")
             else:
@@ -127,9 +125,15 @@ class DatastoreHandler(tornado.web.RequestHandler):
             # An update was received but it was made by this client or was not relevant.
             # Ignore and keep waiting for the remaining time of the original 15 seconds.
             # Clamp this to zero just in case we've gone over since the Condition fell through.
+            #
+            # We will fall out of the loop if remainingTime == 0, in this case this is the same as
+            # having no updates before the timeout, so return an http/304
             remainingTime = max(datetime.timedelta(seconds=0), remainingTime - (datetime.datetime.now() - startTime))
             logger.info(f"{client_id}: Remaining time: {remainingTime}.")
 
+        logger.info(f"{client_id}: Timed out waiting for update. Returning with HTTP/304 status.")
+        self.set_header("Etag", str(await ServerObjects.datastore.etag.value))
+        self.set_status(304)
 
     async def options(self, path:str=""):
         """
