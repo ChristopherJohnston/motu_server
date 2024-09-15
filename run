@@ -3,17 +3,25 @@ import asyncio
 from motu_server import server
 import argparse
 
+
 def main():
     parser = argparse.ArgumentParser(
         prog='motu_server',
         description="Run the web server"
     )
+    parser.add_argument('--discoveryname', type=str, help="The name of the server for MOTU device discovery.")
     parser.add_argument('--datastore', type=str, help="The path to the datastore")
     parser.add_argument('--port', type=int, help="The port to listen on")
-    parser.set_defaults(datastore=None, port=8888)
+    parser.set_defaults(datastore=None, port=8888, discoveryname="Motu Test Server")
     args = parser.parse_args()
 
-    asyncio.run(server.main(args.datastore, args.port))
+    try:
+        asyncio.run(server.main(discovery_name=args.discoveryname, datastore=args.datastore, port=args.port))
+    except KeyboardInterrupt:
+        print("Program interrupted. Exiting gracefully...")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
 
 if __name__ == '__main__':
     main()

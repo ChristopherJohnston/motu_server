@@ -5,6 +5,7 @@ import json
 import datetime
 from typing import Optional
 from motu_server.datastore import Datastore
+from motu_server.zeroconf_registration import MotuZeroConfRegistration
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,7 @@ def make_app() -> tornado.web.Application:
     ])
 
 
-async def main(datastore:Optional[str]=None, port:int=8888) -> None:
+async def run_tornado_server(datastore:Optional[str]=None, port:int=8888) -> None:
     setupDatastore(path=datastore)
     app = make_app()
     app.listen(port)
@@ -173,5 +174,23 @@ async def main(datastore:Optional[str]=None, port:int=8888) -> None:
     logger.info(f"Datastore located at http://localhost:{port}/datastore")
     await asyncio.Event().wait()
 
+
+async def main(discovery_name:Optional[str]="Motu Test Server", datastore:Optional[str]=None, port:int=8888) -> None:
+    tornado_task = asyncio.create_task(run_tornado_server(datastore, port))
+    zcr = MotuZeroConfRegistration()
+    register_task = asyncio.create_task(zcr.register(discovery_name))
+    try:
+        await asyncio.gather(tornado_task, register_task)
+    except asyncio.CancelledError:
+        logger.info("Main tasks cancelled. Cleaning up...")
+    finally:
+        await zcr.unregister()
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Program interrupted. Exiting gracefully...")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")

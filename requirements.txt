@@ -1,3 +1,4 @@
 tornado
 aiohttp
+zeroconf
 motu_server
