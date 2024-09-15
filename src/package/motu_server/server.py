@@ -175,10 +175,14 @@ async def run_tornado_server(datastore:Optional[str]=None, port:int=8888) -> Non
     await asyncio.Event().wait()
 
 
-async def main(discovery_name:Optional[str]="Motu Test Server", datastore:Optional[str]=None, port:int=8888) -> None:
+async def main(
+        register_server:Optional[bool]=True,
+        discovery_name:Optional[str]="Motu Test Server",
+        datastore:Optional[str]=None, port:int=8888
+    ) -> None:
     tornado_task = asyncio.create_task(run_tornado_server(datastore, port))
-    zcr = MotuZeroConfRegistration()
-    register_task = asyncio.create_task(zcr.register(discovery_name))
+    zcr = MotuZeroConfRegistration(register_server, discovery_name)
+    register_task = asyncio.create_task(zcr.register())
     try:
         await asyncio.gather(tornado_task, register_task)
     except asyncio.CancelledError:
