@@ -8,10 +8,16 @@ For a websocket bridge, see [MOTU AVB Websocket Bridge](https://github.com/Chris
 
 # Usage
 
-In the command line, call
+In the command line, call:
 
 ```
 ./run --datastore ./datastore.json --port 8888
+```
+
+alternatively:
+
+```
+make run
 ```
 
 For HTTP request examples, see [requests.http](./requests.http) (Requires [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client))
