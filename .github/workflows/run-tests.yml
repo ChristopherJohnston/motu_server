@@ -22,6 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ./src
           pip install -r requirements.txt
+          pip install -r requirements-dev.txt
       - name: Run tests with pytest
         run: pytest --cache-clear --cov=motu_server src/tests/ > pytest-coverage.txt
       - name: Comment Coverage
