@@ -115,6 +115,22 @@
                         "defaultName": "Bank 2 Ch 1"
                     }
                 }
+            },
+            "3": {
+                "userCh": 2,
+                "maxCh": 2,
+                "numCh": 2,
+                "name": "Mix Main",
+                "ch": {
+                    "0": {
+                        "name": "Main L",
+                        "defaultName": "Main L"
+                    },
+                    "1": {
+                        "name": "Main R",
+                        "defaultName": "Main R"
+                    }
+                }                
             }
         },
 
