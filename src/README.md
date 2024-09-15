@@ -6,12 +6,19 @@ For Datastore API, see [MOTU AVB Datastore API Docs](https://cdn-data.motu.com/d
 
 For a websocket bridge, see [MOTU AVB Websocket Bridge](https://github.com/ChristopherJohnston/motu_websocket_bridge)
 
+For HTTP request examples, see [requests.http](https://github.com/ChristopherJohnston/motu_server/requests.http)
+
 # Usage
 
-In the command line, call
-
 ```
-./run --datastore ./datastore.json --port 8888
+import asyncio
+from motu_server import server
+
+def main():
+    asyncio.run(server.main())
+
+if __name__ == '__main__':
+    main()
 ```
 
-For HTTP request examples, see [requests.http](./requests.http) (Requires [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client))
+Server is available at http://localhost:8888/datastore
