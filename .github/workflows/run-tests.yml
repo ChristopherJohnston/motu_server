@@ -1,9 +1,5 @@
-name: Run Tests
+name: Run Tests in PR
 on:
-  push:
-    branches:
-      - main
-
   pull_request:
     branches:
       - main
