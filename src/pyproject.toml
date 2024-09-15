@@ -4,11 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "motu_server"
-version = "0.1.1"
+version = "0.1.2"
 description = "A tornado web server emulating a MOTU AVB interface's datastore API. Enables development of tools to read and manipulate the datastore without requiring an active interface."
 readme = "README.md"
 authors = [{ name = "Christopher Johnston", email = "christopher_johnston@me.com" }]
 license = { file = "LICENSE" }
+dependencies = [
+    "tornado",
+    "aiohttp"
+]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
