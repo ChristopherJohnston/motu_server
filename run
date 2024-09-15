@@ -10,13 +10,19 @@ def main():
         description="Run the web server"
     )
     parser.add_argument('--discoveryname', type=str, help="The name of the server for MOTU device discovery.")
+    parser.add_argument('--no-register', dest="register_server", action="store_false", help="Do not register for MOTU device discovery")
     parser.add_argument('--datastore', type=str, help="The path to the datastore")
     parser.add_argument('--port', type=int, help="The port to listen on")
-    parser.set_defaults(datastore=None, port=8888, discoveryname="Motu Test Server")
+    parser.set_defaults(datastore=None, port=8888, discoveryname="Motu Test Server", register_server=True)
     args = parser.parse_args()
 
     try:
-        asyncio.run(server.main(discovery_name=args.discoveryname, datastore=args.datastore, port=args.port))
+        asyncio.run(server.main(
+            register_server=args.register_server,
+            discovery_name=args.discoveryname,
+            datastore=args.datastore,
+            port=args.port
+        ))
     except KeyboardInterrupt:
         print("Program interrupted. Exiting gracefully...")
     except Exception as e:

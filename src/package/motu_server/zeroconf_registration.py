@@ -30,16 +30,16 @@ class AsyncRunner:
         logger.info("Unregistration complete")
 
 class MotuZeroConfRegistration:
-    async def register(self, server_name="Motu Test Server"):
-        logger.info(f"Registering Server for MOTU Discovery using zeroconf as '{server_name}'")
-        ip_version = IPVersion.All
+    def __init__(self, register_server=True, server_name="MOTU Test Server"):
+        self.register_server = register_server
+        self.server_name = server_name
         hostname = socket.gethostname()
         server_uid = uuid.uuid4().hex[:16]
 
         self.infos = [
             AsyncServiceInfo(
                 "_http._tcp.local.",
-                f"{server_name}._http._tcp.local.",
+                f"{self.server_name}._http._tcp.local.",
                 addresses=[socket.inet_aton("127.0.0.1")],
                 port=80,
                 properties={
@@ -69,10 +69,21 @@ class MotuZeroConfRegistration:
             #     server=f'{hostname}.',
             # )
         ]
-        self.runner = AsyncRunner(ip_version)
+
+    async def register(self):
+        if not self.register_server:
+            logger.info("Not registering server for MOTU discovery.")
+            return
+
+        logger.info(f"Registering Server for MOTU Discovery using zeroconf as '{self.server_name}'")
+        self.runner = AsyncRunner(IPVersion.All)
         await self.runner.register_services(self.infos)
         
     async def unregister(self):
+        if not self.register_server:
+            logger.info("Server is not registered for MOTU discovery so no need to unregister.")
+            return
+        
         logger.info("Unregistering MOTU server using zeroconf...")
         await self.runner.unregister_services(self.infos)
         
