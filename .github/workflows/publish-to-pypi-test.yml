@@ -1,8 +1,11 @@
-name: Run Tests
+name: Run Tests, Draft Release and Deploy to PyPi Test
 on:
   push:
     branches:
       - main
+
+permissions:
+  contents: read
 
 jobs:
   run-test:
@@ -26,7 +29,19 @@ jobs:
           pytest --cache-clear --cov=motu_server > pytest-coverage.txt
       - name: Comment Coverage
         uses: coroo/pytest-coverage-commentator@v1.0.2
-  deploy:
+  update_release_draft:
+    if: github.repository == 'ChristopherJohnston/motu_server'
+    permissions:
+      contents: write
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          disable-autolabeler: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy-to-pypi:
     runs-on: ubuntu-20.04
 
     steps:
