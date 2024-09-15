@@ -181,7 +181,7 @@ async def main(
         datastore:Optional[str]=None, port:int=8888
     ) -> None:
     tornado_task = asyncio.create_task(run_tornado_server(datastore, port))
-    zcr = MotuZeroConfRegistration(register_server, discovery_name)
+    zcr = MotuZeroConfRegistration(register_server, discovery_name, port)
     register_task = asyncio.create_task(zcr.register())
     try:
         await asyncio.gather(tornado_task, register_task)

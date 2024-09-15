@@ -30,7 +30,7 @@ class AsyncRunner:
         logger.info("Unregistration complete")
 
 class MotuZeroConfRegistration:
-    def __init__(self, register_server=True, server_name="MOTU Test Server"):
+    def __init__(self, register_server=True, server_name="MOTU Test Server", port=8888):
         self.register_server = register_server
         self.server_name = server_name
         hostname = socket.gethostname()
@@ -41,7 +41,7 @@ class MotuZeroConfRegistration:
                 "_http._tcp.local.",
                 f"{self.server_name}._http._tcp.local.",
                 addresses=[socket.inet_aton("127.0.0.1")],
-                port=80,
+                port=port,
                 properties={
                     b'motu.mdns.type': b'netiodevice',
                     b'uid': server_uid,
