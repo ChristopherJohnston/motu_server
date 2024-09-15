@@ -6,3 +6,5 @@ pytest-cov
 pytest-asyncio
 pylint
 ruff
+tornado
+aiohttp

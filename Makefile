@@ -15,9 +15,17 @@ mypy: $(MYPY_DIRS)
 
 .PHONY: test
 test:
-	pytest --cov ${SRC_DIR}/tests -v -s ${SRC_DIR}/tests
+	pytest --cov=motu_server -v -s ${SRC_DIR}/tests
 
 .PHONY: develop
 develop:
 	python -m pip install --editable ${SRC_DIR}
 	python -m pip install -U -r requirements-dev.txt
+
+.PHONY: install
+install:
+	python -m pip install -U -r requirements.txt
+
+.PHONY: run
+run: install
+	./run --datastore ./datastore.json --port 8888
