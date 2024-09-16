@@ -5,9 +5,6 @@ on:
     tags:
       - "v*.*.*"
 
-permissions:
-  contents: read
-
 jobs:
   publish_release:
     if: github.repository == 'ChristopherJohnston/motu_server'
@@ -29,6 +26,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   upload-to-pypi:
     runs-on: ubuntu-20.04
+    permissions:
+      contents: read
 
     steps:
     - uses: actions/checkout@v2

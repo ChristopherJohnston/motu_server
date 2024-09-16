@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PROJECT_ID=motu-avb-controller
-      SERVICE_NAME=motu-server
-      REGION=us-central1
-      IMAGE_NAME=gcr.io/$PROJECT_ID/$SERVICE_NAME:${{ github.event.release.tag_name }}
+      PROJECT_ID: motu-avb-controller
+      SERVICE_NAME: motu-server
+      REGION: us-central1
+      IMAGE_NAME: gcr.io/$PROJECT_ID/$SERVICE_NAME:${{ github.event.release.tag_name }}
 
     steps:
       - name: Check out the code
