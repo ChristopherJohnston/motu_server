@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   run-test:
+    permissions:
+      pull-requests: write
     uses: ./.github/workflows/run-tests.yml
   update-release-draft:
     needs: run-test

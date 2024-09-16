@@ -6,6 +6,8 @@ on:
 
 jobs:
   run-test:
+    permissions:
+      pull-requests: write
     uses: ./.github/workflows/run-tests.yml
 
   comment-coverage:
