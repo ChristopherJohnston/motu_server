@@ -2,6 +2,7 @@
 import asyncio
 from motu_server import server
 import argparse
+import os
 
 
 def main():
@@ -13,15 +14,17 @@ def main():
     parser.add_argument('--no-register', dest="register_server", action="store_false", help="Do not register for MOTU device discovery")
     parser.add_argument('--datastore', type=str, help="The path to the datastore")
     parser.add_argument('--port', type=int, help="The port to listen on")
-    parser.set_defaults(datastore=None, port=8888, discoveryname="Motu Test Server", register_server=True)
+    parser.set_defaults(datastore=None, port=None, discoveryname="Motu Test Server", register_server=True)
     args = parser.parse_args()
 
     try:
+        port = args.port or int(os.environ.get("PORT", 8888))  # Default to 8080 if PORT is not set
+
         asyncio.run(server.main(
             register_server=args.register_server,
             discovery_name=args.discoveryname,
             datastore=args.datastore,
-            port=args.port
+            port=port
         ))
     except KeyboardInterrupt:
         print("Program interrupted. Exiting gracefully...")

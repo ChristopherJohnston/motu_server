@@ -1,5 +1,8 @@
 {
     "ext": {
+        "presets": {
+            "device": "1001:Preset1:1002:Preset2:1003:Preset3:1004:Preset4"
+        },
         "ibankDisplayOrder": "0:1:2",
         "obankDisplayOrder": "0:1",
 
