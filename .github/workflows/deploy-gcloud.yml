@@ -1,0 +1,36 @@
+name: Deploy to Google Cloud Run
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID=motu-avb-controller
+      SERVICE_NAME=motu-server
+      REGION=us-central1
+      IMAGE_NAME=gcr.io/$PROJECT_ID/$SERVICE_NAME:${{ github.event.release.tag_name }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Authenticate Docker with Google Cloud
+        run: gcloud auth configure-docker
+
+      - name: Build and Push Docker image
+        run: |
+          gcloud builds submit --tag $IMAGE_NAME
+
+      - name: Deploy to Cloud Run
+        run: |          
+          gcloud run deploy $SERVICE_NAME --image $IMAGE_NAME --platform managed --region $REGION --allow-unauthenticated
