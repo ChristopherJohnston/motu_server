@@ -1,31 +1,37 @@
 name: Deploy to Google Cloud Run
 
 on:
-  release:
-    types: [published]
-
-permissions:
-  contents: read
+  workflow_call:
+    inputs:
+      version_tag:
+        required: true
+        type: string
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-gcloud:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     env:
       PROJECT_ID: motu-avb-controller
       SERVICE_NAME: motu-server
       REGION: us-central1
-      IMAGE_NAME: gcr.io/$PROJECT_ID/$SERVICE_NAME:${{ github.event.release.tag_name }}
+      IMAGE_NAME: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ inputs.config-path }}
 
     steps:
       - name: Check out the code
         uses: actions/checkout@v2
 
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+      - id: 'auth'
+        uses: 'google-github-action/auth@v2'
         with:
           project_id: ${{ env.PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Authenticate Docker with Google Cloud
         run: gcloud auth configure-docker
