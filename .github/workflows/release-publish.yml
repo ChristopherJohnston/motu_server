@@ -26,9 +26,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy_to_gcloud:
     needs: publish_release
-    uses: ./.github/workflows/deploy-gcloud.yml
-    with:
-      version_tag: ${{ env.RELEASE_VERSION }}
+    steps:
+      - name: Set version env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - uses: ./.github/workflows/deploy-gcloud.yml
+        with:
+          version_tag: ${{ env.RELEASE_VERSION }}
   upload_to_pypi:
     needs: publish_release
     uses: ./.github/workflows/publish-to-pypi.yml
