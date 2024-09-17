@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish_release:
-    if: github.repository == 'ChristopherJohnston/motu_server' && !startsWith(github.ref, 'refs/tags/v')
+    if: github.repository == 'ChristopherJohnston/motu_server'
     permissions:
       contents: write
       pull-requests: read
