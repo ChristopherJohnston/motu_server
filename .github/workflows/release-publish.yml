@@ -27,12 +27,10 @@ jobs:
   deploy_to_gcloud:
     runs-on: ubuntu-latest
     needs: publish_release
-    steps:
-      - uses: ./.github/workflows/deploy-gccloud.yml
-        with:
-          version_tag: ${{ env.RELEASE_VERSION }}
+    uses: ./.github/workflows/deploy-gccloud.yml
+    with:
+      version_tag: ${{ env.RELEASE_VERSION }}
   upload_to_pypi:
     runs-on: ubuntu-latest
     needs: publish_release
-    steps:
-      - uses: ./.github/workflows/publish-to-pypi.yml
+    uses: ./.github/workflows/publish-to-pypi.yml
